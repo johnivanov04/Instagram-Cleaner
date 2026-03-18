@@ -1,0 +1,18 @@
+[
+  {
+    "title": "Followers",
+    "media_list_data": [],
+    "string_list_data": [
+      {
+        "href": "https://www.instagram.com/Alice.Example/",
+        "value": "Alice.Example",
+        "timestamp": 1700000000
+      },
+      {
+        "href": "https://www.instagram.com/Bob_Example/",
+        "value": "Bob_Example",
+        "timestamp": 1700000000
+      }
+    ]
+  }
+]
