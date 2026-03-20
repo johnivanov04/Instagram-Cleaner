@@ -35,6 +35,18 @@ describe("filterRows", () => {
     expect(result.map((row) => row.normalizedUsername)).toEqual(["alpha", "bravo"]);
   });
 
+  it("hides completed rows outside completed filter", () => {
+    const allResult = filterRows(rows, "all", "");
+    expect(allResult.map((row) => row.normalizedUsername)).toEqual(["alpha", "charlie"]);
+
+    const selectedResult = filterRows(
+      rows.map((row) => ({ ...row, selected: true })),
+      "selected",
+      "",
+    );
+    expect(selectedResult.map((row) => row.normalizedUsername)).toEqual(["alpha", "charlie"]);
+  });
+
   it("applies search inside completed filter", () => {
     const result = filterRows(rows, "completed", "br");
     expect(result.map((row) => row.normalizedUsername)).toEqual(["bravo"]);

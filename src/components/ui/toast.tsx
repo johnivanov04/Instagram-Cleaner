@@ -12,6 +12,9 @@ interface ToastMessage {
   title: string;
   description?: string;
   kind: ToastKind;
+  actionLabel?: string;
+  onAction?: () => void;
+  durationMs?: number;
 }
 
 interface ToastStore {
@@ -49,7 +52,7 @@ export function ToastViewport(): React.JSX.Element {
     const timers = toasts.map((toast) =>
       window.setTimeout(() => {
         dismissToast(toast.id);
-      }, 2600),
+      }, toast.durationMs ?? 2600),
     );
 
     return () => {
@@ -71,10 +74,27 @@ export function ToastViewport(): React.JSX.Element {
             toast.kind === "info" && "border-l-sky-500",
           )}
         >
-          <p className="text-sm font-semibold">{toast.title}</p>
-          {toast.description ? (
-            <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{toast.description}</p>
-          ) : null}
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">{toast.title}</p>
+              {toast.description ? (
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{toast.description}</p>
+              ) : null}
+            </div>
+
+            {toast.actionLabel && toast.onAction ? (
+              <button
+                type="button"
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                onClick={() => {
+                  toast.onAction?.();
+                  dismissToast(toast.id);
+                }}
+              >
+                {toast.actionLabel}
+              </button>
+            ) : null}
+          </div>
         </Card>
       ))}
     </div>

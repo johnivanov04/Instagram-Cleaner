@@ -28,12 +28,41 @@ function statusVariant(status: ReviewStatus): "default" | "neutral" | "warning" 
 
 export function ResultsTable(): React.JSX.Element {
   const { allRows, visibleRows, totalPages } = useVisibleRows();
+  const [exitingRows, setExitingRows] = React.useState<Record<string, boolean>>({});
   const page = useAuditStore((s) => s.page);
   const setPage = useAuditStore((s) => s.setPage);
   const setSelected = useAuditStore((s) => s.setSelected);
   const setStatus = useAuditStore((s) => s.setStatus);
+  const setReviewStatus = useAuditStore((s) => s.setReviewStatus);
   const setCompleted = useAuditStore((s) => s.setCompleted);
   const { toast } = useToast();
+
+  const completeWithAnimation = React.useCallback(
+    (normalizedUsername: string, previousStatus: ReviewStatus) => {
+      setExitingRows((state) => ({ ...state, [normalizedUsername]: true }));
+
+      window.setTimeout(() => {
+        setCompleted(normalizedUsername);
+        setExitingRows((state) => {
+          const next = { ...state };
+          delete next[normalizedUsername];
+          return next;
+        });
+
+        toast({
+          kind: "info",
+          title: "Marked as completed",
+          description: "Removed from active review. Undo?",
+          actionLabel: "Undo",
+          durationMs: 5000,
+          onAction: () => {
+            setReviewStatus(normalizedUsername, previousStatus);
+          },
+        });
+      }, 260);
+    },
+    [setCompleted, setReviewStatus, toast],
+  );
 
   if (allRows.length === 0) {
     return (
@@ -70,9 +99,15 @@ export function ResultsTable(): React.JSX.Element {
             <tbody>
               {visibleRows.map((row) => {
                 const profileUrl = `https://www.instagram.com/${row.username}/`;
+                const isExiting = Boolean(exitingRows[row.normalizedUsername]);
 
                 return (
-                  <tr key={`${row.normalizedUsername}-${row.category}`} className="border-b border-slate-100 dark:border-slate-900">
+                  <tr
+                    key={`${row.normalizedUsername}-${row.category}`}
+                    className={`border-b border-slate-100 transition-all duration-300 dark:border-slate-900 ${
+                      isExiting ? "translate-x-2 opacity-0" : "translate-x-0 opacity-100"
+                    }`}
+                  >
                     <td className="py-2 pr-3">
                       <Checkbox
                         checked={row.selected}
@@ -106,7 +141,12 @@ export function ResultsTable(): React.JSX.Element {
                         <Button size="sm" variant="destructive" onClick={() => setStatus(row.normalizedUsername, "unfollow")}>
                           Mark for Unfollow
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setCompleted(row.normalizedUsername)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isExiting}
+                          onClick={() => completeWithAnimation(row.normalizedUsername, row.status)}
+                        >
                           Mark Completed
                         </Button>
                       </div>

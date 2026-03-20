@@ -38,6 +38,7 @@ interface AuditState {
   setPage: (page: number) => void;
   setSelected: (normalizedUsername: string, selected: boolean) => void;
   setStatus: (normalizedUsername: string, requested: "keep" | "unfollow") => void;
+  setReviewStatus: (normalizedUsername: string, status: ReviewStatus) => void;
   setCompleted: (normalizedUsername: string) => void;
   setVisibleSelected: (rows: AuditRow[], selected: boolean) => void;
   clearSelection: () => void;
@@ -117,6 +118,16 @@ export const useAuditStore = create<AuditState>()(
             },
           };
         }),
+      setReviewStatus: (normalizedUsername, status) =>
+        set((state) => ({
+          reviewState: {
+            ...state.reviewState,
+            [normalizedUsername]: {
+              ...getReviewMeta(state.reviewState, normalizedUsername),
+              status,
+            },
+          },
+        })),
       setCompleted: (normalizedUsername) =>
         set((state) => ({
           reviewState: {

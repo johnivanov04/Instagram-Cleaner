@@ -40,6 +40,7 @@ export function filterRows(rows: AuditRow[], filter: ResultFilter, search: strin
 
   return rows.filter((row) => {
     const completedView = row.status === "completed" || row.status === "keep";
+    const visibleOutsideCompleted = filter === "completed" || row.status !== "completed";
 
     const byFilter =
       filter === "all" ||
@@ -51,7 +52,7 @@ export function filterRows(rows: AuditRow[], filter: ResultFilter, search: strin
 
     const bySearch = query.length === 0 || row.normalizedUsername.includes(query);
 
-    return byFilter && bySearch;
+    return byFilter && bySearch && visibleOutsideCompleted;
   });
 }
 
