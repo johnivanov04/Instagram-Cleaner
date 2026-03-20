@@ -13,6 +13,7 @@ const FILTERS: { key: ResultFilter; label: string }[] = [
   { key: "not-following-back", label: "Not Following Back" },
   { key: "mutuals", label: "Mutuals" },
   { key: "fans", label: "Fans" },
+  { key: "completed", label: "Completed" },
   { key: "selected", label: "Selected" },
 ];
 

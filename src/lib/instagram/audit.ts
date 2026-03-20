@@ -39,9 +39,15 @@ export function filterRows(rows: AuditRow[], filter: ResultFilter, search: strin
   const query = search.trim().toLowerCase();
 
   return rows.filter((row) => {
+    const completedView = row.status === "completed" || row.status === "keep";
+
     const byFilter =
       filter === "all" ||
-      (filter === "selected" ? row.selected : row.category === filter);
+      (filter === "selected"
+        ? row.selected
+        : filter === "completed"
+          ? completedView
+          : row.category === filter);
 
     const bySearch = query.length === 0 || row.normalizedUsername.includes(query);
 

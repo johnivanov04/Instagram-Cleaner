@@ -7,7 +7,8 @@ export type ResultFilter =
   | "not-following-back"
   | "mutuals"
   | "fans"
-  | "selected";
+  | "selected"
+  | "completed";
 
 export interface ParsedAccount {
   username: string;
