@@ -1,3 +1,5 @@
+const KNOWN_LABELS = new Set(["followers", "following", "media", "post", "story", "reel"]);
+
 function collectCandidateUsernames(value: unknown, out: string[]): void {
   if (value === null || value === undefined) {
     return;
@@ -19,6 +21,10 @@ function collectCandidateUsernames(value: unknown, out: string[]): void {
 
     if (typeof obj.username === "string") {
       out.push(obj.username);
+    }
+
+    if (typeof obj.title === "string" && !KNOWN_LABELS.has(obj.title.toLowerCase())) {
+      out.push(obj.title);
     }
 
     for (const nested of Object.values(obj)) {
