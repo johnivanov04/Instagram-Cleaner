@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EXTENSION_COMPLETE_REQUEST_EVENT } from "@/lib/instagram/extension";
 import { useToast } from "@/components/ui/toast";
 import { statusLabel, useAuditStore, useVisibleRows } from "@/store/use-audit-store";
 import type { ReviewStatus } from "@/types/instagram";
@@ -39,6 +40,10 @@ export function ResultsTable(): React.JSX.Element {
 
   const completeWithAnimation = React.useCallback(
     (normalizedUsername: string, previousStatus: ReviewStatus) => {
+      if (previousStatus === "completed") {
+        return;
+      }
+
       setExitingRows((state) => ({ ...state, [normalizedUsername]: true }));
 
       window.setTimeout(() => {
@@ -63,6 +68,33 @@ export function ResultsTable(): React.JSX.Element {
     },
     [setCompleted, setReviewStatus, toast],
   );
+
+  React.useEffect(() => {
+    const handleExtensionComplete = (event: Event): void => {
+      const custom = event as CustomEvent<{
+        normalizedUsername?: string;
+        previousStatus?: ReviewStatus;
+      }>;
+
+      const normalizedUsername = custom.detail?.normalizedUsername;
+      if (!normalizedUsername) {
+        return;
+      }
+
+      const previousStatus =
+        custom.detail?.previousStatus ??
+        useAuditStore.getState().reviewState[normalizedUsername]?.status ??
+        "unreviewed";
+
+      completeWithAnimation(normalizedUsername, previousStatus);
+    };
+
+    window.addEventListener(EXTENSION_COMPLETE_REQUEST_EVENT, handleExtensionComplete as EventListener);
+
+    return () => {
+      window.removeEventListener(EXTENSION_COMPLETE_REQUEST_EVENT, handleExtensionComplete as EventListener);
+    };
+  }, [completeWithAnimation]);
 
   if (allRows.length === 0) {
     return (

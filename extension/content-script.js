@@ -13,6 +13,21 @@ let sidebarRoot = null;
 let toggleButton = null;
 let observer = null;
 
+function sendRuntimeMessage(message, callback) {
+  if (!chrome?.runtime?.id) {
+    return;
+  }
+
+  try {
+    chrome.runtime.sendMessage(message, (response) => {
+      void chrome.runtime.lastError;
+      callback?.(response);
+    });
+  } catch {
+    // Extension context can be invalidated during reloads; ignore stale script calls.
+  }
+}
+
 function normalizeUsername(value) {
   if (typeof value !== "string") {
     return "";
@@ -30,19 +45,25 @@ function getUnfollowAccounts() {
     return [];
   }
 
-  return payload.accounts.filter((item) => item.status === "unfollow" || item.status === "completed");
+  return payload.accounts.filter((item) => item.status === "unfollow");
+}
+
+function getCompletedCount() {
+  if (!payload || !Array.isArray(payload.accounts)) {
+    return 0;
+  }
+
+  return payload.accounts.filter((item) => item.status === "completed").length;
 }
 
 function savePayload(nextPayload) {
   payload = nextPayload;
-  chrome.runtime.sendMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: nextPayload }, () => {
-    void chrome.runtime.lastError;
-  });
+  sendRuntimeMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: nextPayload });
 }
 
 function requestPayloadFromBackground() {
-  chrome.runtime.sendMessage({ type: "IG_AUDIT_REQUEST_PAYLOAD" }, (response) => {
-    if (chrome.runtime.lastError) {
+  sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_PAYLOAD" }, (response) => {
+    if (!response) {
       return;
     }
 
@@ -54,9 +75,7 @@ function requestPayloadFromBackground() {
       return;
     }
 
-    chrome.runtime.sendMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" }, () => {
-      void chrome.runtime.lastError;
-    });
+    sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" });
   });
 }
 
@@ -97,16 +116,11 @@ function markCompleted(username, shouldNotifyApp = true) {
     generatedAt: new Date().toISOString(),
   };
 
-  chrome.runtime.sendMessage({ type: "IG_AUDIT_MARK_COMPLETED", username }, () => {
-    void chrome.runtime.lastError;
-  });
+  sendRuntimeMessage({ type: "IG_AUDIT_MARK_COMPLETED", username });
 
   if (shouldNotifyApp) {
-    chrome.runtime.sendMessage(
+    sendRuntimeMessage(
       { type: "IG_AUDIT_BROADCAST_TO_APP", payload: { type: "IG_AUDIT_MARK_COMPLETED", username } },
-      () => {
-        void chrome.runtime.lastError;
-      },
     );
   }
 
@@ -148,16 +162,13 @@ function renderSidebar() {
   }
 
   const accounts = getUnfollowAccounts();
-  const completed = accounts.filter((account) => account.status === "completed").length;
-  const total = accounts.length;
+  const completed = getCompletedCount();
+  const total = accounts.length + completed;
 
   const listMarkup = accounts
     .map((account) => {
-      const completedClass = account.status === "completed" ? "completed" : "";
-      const actionButton =
-        account.status === "completed"
-          ? '<button type="button" data-action="reopen">Move back to unfollow</button>'
-          : '<button type="button" data-action="complete">Mark Completed</button>';
+      const completedClass = "";
+      const actionButton = '<button type="button" data-action="complete">Mark Completed</button>';
 
       return `
       <article class="ig-audit-item ${completedClass}" data-username="${account.username}">
@@ -203,9 +214,7 @@ function renderSidebar() {
       }
 
       if (action === "request-sync") {
-        chrome.runtime.sendMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" }, () => {
-          void chrome.runtime.lastError;
-        });
+        sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" });
         return;
       }
 
@@ -233,22 +242,6 @@ function renderSidebar() {
         return;
       }
 
-      if (action === "reopen") {
-        const normalized = normalizeUsername(username);
-        payload = {
-          ...payload,
-          accounts: payload.accounts.map((account) => {
-            if (normalizeUsername(account.normalizedUsername || account.username) !== normalized) {
-              return account;
-            }
-            return { ...account, status: "unfollow" };
-          }),
-          generatedAt: new Date().toISOString(),
-        };
-        savePayload(payload);
-        renderSidebar();
-        highlightMatches();
-      }
     });
   });
 }
@@ -385,11 +378,13 @@ function initAppRelayMode() {
     const data = event.data;
 
     if (data.type === APP_TO_EXTENSION_SYNC && data.payload) {
-      chrome.runtime.sendMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: data.payload }, () => {
-        void chrome.runtime.lastError;
-      });
+      sendRuntimeMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: data.payload });
     }
   });
+
+  if (!chrome?.runtime?.onMessage) {
+    return;
+  }
 
   chrome.runtime.onMessage.addListener((message) => {
     if (!message || typeof message !== "object" || typeof message.type !== "string") {
@@ -422,6 +417,10 @@ function initInstagramMode() {
     }
   });
 
+  if (!chrome?.runtime?.onMessage) {
+    return;
+  }
+
   chrome.runtime.onMessage.addListener((message) => {
     if (!message || typeof message !== "object" || typeof message.type !== "string") {
       return;
@@ -436,9 +435,7 @@ function initInstagramMode() {
     }
 
     if (message.type === "IG_AUDIT_REQUEST_SYNC_FROM_APP") {
-      chrome.runtime.sendMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" }, () => {
-        void chrome.runtime.lastError;
-      });
+      sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" });
     }
   });
 

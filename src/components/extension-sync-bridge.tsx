@@ -4,6 +4,7 @@ import * as React from "react";
 import { buildAuditRows } from "@/lib/instagram/audit";
 import {
   APP_TO_EXTENSION_SYNC,
+  EXTENSION_COMPLETE_REQUEST_EVENT,
   EXTENSION_SYNC_EVENT,
   EXTENSION_TO_APP_COMPLETE,
   EXTENSION_TO_APP_REQUEST_SYNC,
@@ -61,7 +62,16 @@ export function ExtensionSyncBridge(): null {
         return;
       }
 
-      useAuditStore.getState().setCompleted(normalized);
+      const previousStatus = useAuditStore.getState().reviewState[normalized]?.status ?? "unreviewed";
+
+      window.dispatchEvent(
+        new CustomEvent(EXTENSION_COMPLETE_REQUEST_EVENT, {
+          detail: {
+            normalizedUsername: normalized,
+            previousStatus,
+          },
+        }),
+      );
     };
 
     window.addEventListener("message", handleMessage);

@@ -1,5 +1,24 @@
 const STORAGE_KEY = "igAuditPayload";
 
+function safeSendToTab(tabId, payload) {
+  chrome.tabs.sendMessage(tabId, payload, () => {
+    // Ignore missing receivers (tab not reloaded, page doesn't match, or script not injected).
+    void chrome.runtime.lastError;
+  });
+}
+
+function broadcastToUrls(urls, payload, done) {
+  chrome.tabs.query({ url: urls }, (tabs) => {
+    for (const tab of tabs) {
+      if (tab.id) {
+        safeSendToTab(tab.id, payload);
+      }
+    }
+
+    done?.();
+  });
+}
+
 function normalizeUsername(value) {
   if (typeof value !== "string") {
     return "";
@@ -50,12 +69,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "IG_AUDIT_SYNC_PAYLOAD") {
     chrome.storage.local.set({ [STORAGE_KEY]: message.payload });
-    chrome.tabs.query({ url: ["https://www.instagram.com/*"] }, (tabs) => {
-      for (const tab of tabs) {
-        if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, { type: "IG_AUDIT_SYNC_PAYLOAD", payload: message.payload });
-        }
-      }
+    broadcastToUrls(["https://www.instagram.com/*"], {
+      type: "IG_AUDIT_SYNC_PAYLOAD",
+      payload: message.payload,
     });
     sendResponse({ ok: true });
     return true;
@@ -72,15 +88,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get(STORAGE_KEY, (result) => {
       const next = updatePayloadWithCompleted(result[STORAGE_KEY], message.username);
       chrome.storage.local.set({ [STORAGE_KEY]: next }, () => {
-        chrome.tabs.query({ url: ["http://localhost:3000/*", "http://127.0.0.1:3000/*"] }, (tabs) => {
-          for (const tab of tabs) {
-            if (tab.id) {
-              chrome.tabs.sendMessage(tab.id, {
-                type: "IG_AUDIT_MARK_COMPLETED",
-                username: message.username,
-              });
-            }
-          }
+        broadcastToUrls(["http://localhost:3000/*", "http://127.0.0.1:3000/*"], {
+          type: "IG_AUDIT_MARK_COMPLETED",
+          username: message.username,
         });
 
         sendResponse({ ok: true, payload: next });
@@ -91,13 +101,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "IG_AUDIT_REQUEST_SYNC_FROM_APP") {
-    chrome.tabs.query({ url: ["http://localhost:3000/*", "http://127.0.0.1:3000/*"] }, (tabs) => {
-      for (const tab of tabs) {
-        if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, { type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" });
-        }
-      }
-
+    broadcastToUrls(["http://localhost:3000/*", "http://127.0.0.1:3000/*"], {
+      type: "IG_AUDIT_REQUEST_SYNC_FROM_APP",
+    }, () => {
       sendResponse({ ok: true });
     });
 
@@ -105,13 +111,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "IG_AUDIT_BROADCAST_TO_APP" && message.payload) {
-    chrome.tabs.query({ url: ["http://localhost:3000/*", "http://127.0.0.1:3000/*"] }, (tabs) => {
-      for (const tab of tabs) {
-        if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, message.payload);
-        }
-      }
-
+    broadcastToUrls(["http://localhost:3000/*", "http://127.0.0.1:3000/*"], message.payload, () => {
       sendResponse({ ok: true });
     });
 
