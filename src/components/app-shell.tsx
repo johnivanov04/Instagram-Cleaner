@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ExtensionSyncBridge } from "@/components/extension-sync-bridge";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { ResultsPanel } from "@/components/results/results-panel";
 import { ToastViewport } from "@/components/ui/toast";
@@ -9,6 +10,7 @@ import { UploadPanel } from "@/components/upload/upload-panel";
 export function AppShell(): React.JSX.Element {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-8">
+      <ExtensionSyncBridge />
       <section className="rounded-2xl border border-emerald-300/60 bg-gradient-to-br from-emerald-100 via-lime-50 to-white p-6 shadow-sm dark:border-emerald-900/70 dark:from-emerald-950/60 dark:via-slate-950 dark:to-slate-950">
         <p className="inline-block rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
           Privacy-first

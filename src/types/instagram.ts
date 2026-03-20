@@ -1,6 +1,6 @@
 export type SourceType = "followers" | "following" | "unknown";
 
-export type ReviewStatus = "unreviewed" | "keep" | "unfollow";
+export type ReviewStatus = "unreviewed" | "keep" | "unfollow" | "completed";
 
 export type ResultFilter =
   | "all"
@@ -45,4 +45,19 @@ export interface AuditRow extends ParsedAccount {
   category: "not-following-back" | "mutuals" | "fans";
   selected: boolean;
   status: ReviewStatus;
+}
+
+export interface ExtensionAccount {
+  username: string;
+  normalizedUsername: string;
+  category: AuditRow["category"];
+  status: ReviewStatus;
+  selected: boolean;
+}
+
+export interface ExtensionPayload {
+  version: number;
+  generatedAt: string;
+  unfollowTargets: string[];
+  accounts: ExtensionAccount[];
 }

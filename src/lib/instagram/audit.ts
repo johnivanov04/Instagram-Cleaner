@@ -64,6 +64,10 @@ export function getReviewMeta(
 }
 
 export function nextStatus(current: ReviewStatus, requested: "keep" | "unfollow"): ReviewStatus {
+  if (current === "completed" && requested === "unfollow") {
+    return "unfollow";
+  }
+
   if (current === requested) {
     return "unreviewed";
   }

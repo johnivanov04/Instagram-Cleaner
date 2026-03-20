@@ -10,7 +10,11 @@ import { useToast } from "@/components/ui/toast";
 import { statusLabel, useAuditStore, useVisibleRows } from "@/store/use-audit-store";
 import type { ReviewStatus } from "@/types/instagram";
 
-function statusVariant(status: ReviewStatus): "neutral" | "warning" | "danger" {
+function statusVariant(status: ReviewStatus): "default" | "neutral" | "warning" | "danger" {
+  if (status === "completed") {
+    return "default";
+  }
+
   if (status === "keep") {
     return "neutral";
   }
@@ -28,6 +32,7 @@ export function ResultsTable(): React.JSX.Element {
   const setPage = useAuditStore((s) => s.setPage);
   const setSelected = useAuditStore((s) => s.setSelected);
   const setStatus = useAuditStore((s) => s.setStatus);
+  const setCompleted = useAuditStore((s) => s.setCompleted);
   const { toast } = useToast();
 
   if (allRows.length === 0) {
@@ -100,6 +105,9 @@ export function ResultsTable(): React.JSX.Element {
                         </Button>
                         <Button size="sm" variant="destructive" onClick={() => setStatus(row.normalizedUsername, "unfollow")}>
                           Mark for Unfollow
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setCompleted(row.normalizedUsername)}>
+                          Mark Completed
                         </Button>
                       </div>
                     </td>

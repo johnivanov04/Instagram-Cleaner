@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { compareAccounts } from "@/lib/instagram/compare";
+import { buildExtensionPayload } from "@/lib/instagram/extension";
 import {
   buildAuditRows,
   filterRows,
@@ -15,6 +16,7 @@ import type {
   ComparisonResult,
   ParsedDataset,
   ResultFilter,
+  ExtensionPayload,
   ReviewMeta,
   ReviewStatus,
 } from "@/types/instagram";
@@ -36,6 +38,7 @@ interface AuditState {
   setPage: (page: number) => void;
   setSelected: (normalizedUsername: string, selected: boolean) => void;
   setStatus: (normalizedUsername: string, requested: "keep" | "unfollow") => void;
+  setCompleted: (normalizedUsername: string) => void;
   setVisibleSelected: (rows: AuditRow[], selected: boolean) => void;
   clearSelection: () => void;
   clearAllData: () => void;
@@ -114,6 +117,17 @@ export const useAuditStore = create<AuditState>()(
             },
           };
         }),
+      setCompleted: (normalizedUsername) =>
+        set((state) => ({
+          reviewState: {
+            ...state.reviewState,
+            [normalizedUsername]: {
+              ...getReviewMeta(state.reviewState, normalizedUsername),
+              selected: false,
+              status: "completed",
+            },
+          },
+        })),
       setVisibleSelected: (rows, selected) =>
         set((state) => {
           const next = { ...state.reviewState };
@@ -193,6 +207,10 @@ export function selectedUsernames(rows: AuditRow[]): string[] {
 }
 
 export function statusLabel(status: ReviewStatus): string {
+  if (status === "completed") {
+    return "Completed";
+  }
+
   if (status === "keep") {
     return "Keep";
   }
@@ -202,4 +220,20 @@ export function statusLabel(status: ReviewStatus): string {
   }
 
   return "Unreviewed";
+}
+
+export function extensionPayloadFromState(): ExtensionPayload {
+  const state = useAuditStore.getState();
+
+  if (!state.comparison) {
+    return {
+      version: 1,
+      generatedAt: new Date().toISOString(),
+      unfollowTargets: [],
+      accounts: [],
+    };
+  }
+
+  const rows = buildAuditRows(state.comparison, state.reviewState);
+  return buildExtensionPayload(rows);
 }
