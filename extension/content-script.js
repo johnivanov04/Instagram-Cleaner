@@ -12,6 +12,79 @@ let payload = null;
 let sidebarRoot = null;
 let toggleButton = null;
 let observer = null;
+let diagnosticsExpanded = false;
+let syncStatusTimer = null;
+
+const diagnostics = {
+  source: "Unknown",
+  lastSyncAtMs: null,
+  lastAppSyncAtMs: null,
+  syncStatus: "",
+};
+
+function setSyncStatus(text) {
+  diagnostics.syncStatus = text;
+  renderSidebar();
+
+  if (syncStatusTimer) {
+    window.clearTimeout(syncStatusTimer);
+    syncStatusTimer = null;
+  }
+
+  if (text.length > 0) {
+    syncStatusTimer = window.setTimeout(() => {
+      diagnostics.syncStatus = "";
+      renderSidebar();
+      syncStatusTimer = null;
+    }, 2200);
+  }
+}
+
+function markDiagnosticsSource(source) {
+  diagnostics.source = source;
+  diagnostics.lastSyncAtMs = Date.now();
+
+  if (source === "App sync") {
+    diagnostics.lastAppSyncAtMs = diagnostics.lastSyncAtMs;
+  }
+}
+
+function toRelativeTime(ms) {
+  if (!ms) {
+    return "never";
+  }
+
+  const elapsed = Date.now() - ms;
+  if (elapsed < 10_000) {
+    return "just now";
+  }
+
+  const seconds = Math.floor(elapsed / 1000);
+  if (seconds < 60) {
+    return `${seconds}s ago`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}m ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function isAppSyncStale() {
+  if (!diagnostics.lastAppSyncAtMs) {
+    return false;
+  }
+
+  return Date.now() - diagnostics.lastAppSyncAtMs > 5 * 60 * 1000;
+}
 
 function sendRuntimeMessage(message, callback) {
   if (!chrome?.runtime?.id) {
@@ -58,6 +131,7 @@ function getCompletedCount() {
 
 function savePayload(nextPayload) {
   payload = nextPayload;
+  markDiagnosticsSource("App sync");
   sendRuntimeMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: nextPayload });
 }
 
@@ -69,6 +143,7 @@ function requestPayloadFromBackground() {
 
     if (response && response.payload) {
       payload = response.payload;
+      markDiagnosticsSource("Cached storage");
       renderSidebar();
       highlightMatches();
       injectInlineButtons();
@@ -164,6 +239,27 @@ function renderSidebar() {
   const accounts = getUnfollowAccounts();
   const completed = getCompletedCount();
   const total = accounts.length + completed;
+  const staleWarning = isAppSyncStale();
+  const lastSync = toRelativeTime(diagnostics.lastSyncAtMs);
+  const lastAppSync = toRelativeTime(diagnostics.lastAppSyncAtMs);
+  const syncStatus = diagnostics.syncStatus
+    ? `<div class="ig-audit-sync-status">${diagnostics.syncStatus}</div>`
+    : "";
+  const staleText = staleWarning
+    ? '<div class="ig-audit-warning">App sync is stale (older than 5m).</div>'
+    : "";
+  const diagnosticsPanel = `
+    <details class="ig-audit-diagnostics" ${diagnosticsExpanded ? "open" : ""}>
+      <summary>Diagnostics</summary>
+      <div class="ig-audit-diagnostics-content">
+        <p><strong>Source:</strong> ${diagnostics.source}</p>
+        <p><strong>Last sync:</strong> ${lastSync}</p>
+        <p><strong>Last app sync:</strong> ${lastAppSync}</p>
+        <p><strong>Active targets:</strong> ${accounts.length}</p>
+        ${staleText}
+      </div>
+    </details>
+  `;
 
   const listMarkup = accounts
     .map((account) => {
@@ -189,9 +285,11 @@ function renderSidebar() {
         <div>
           <div class="ig-audit-title">IG Follow Audit Helper</div>
           <div class="ig-audit-meta">${completed} / ${total} completed</div>
+          ${syncStatus}
         </div>
         <button type="button" data-action="request-sync">Sync</button>
       </div>
+      ${diagnosticsPanel}
       <div class="ig-audit-actions">
         <button type="button" data-action="next">Open next unfollow target</button>
       </div>
@@ -214,7 +312,10 @@ function renderSidebar() {
       }
 
       if (action === "request-sync") {
-        sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" });
+        setSyncStatus("Syncing...");
+        sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" }, () => {
+          setSyncStatus("Synced");
+        });
         return;
       }
 
@@ -244,6 +345,13 @@ function renderSidebar() {
 
     });
   });
+
+  const diagnosticsElement = sidebarRoot.querySelector(".ig-audit-diagnostics");
+  if (diagnosticsElement instanceof HTMLDetailsElement) {
+    diagnosticsElement.addEventListener("toggle", () => {
+      diagnosticsExpanded = diagnosticsElement.open;
+    });
+  }
 }
 
 function resolveUsernameFromContext(node) {
@@ -411,6 +519,7 @@ function initInstagramMode() {
 
     if (data.type === APP_TO_EXTENSION_SYNC && data.payload) {
       savePayload(data.payload);
+      markDiagnosticsSource("App sync");
       renderSidebar();
       highlightMatches();
       injectInlineButtons();
@@ -428,6 +537,7 @@ function initInstagramMode() {
 
     if (message.type === "IG_AUDIT_SYNC_PAYLOAD" && message.payload) {
       payload = message.payload;
+      markDiagnosticsSource("App sync");
       renderSidebar();
       highlightMatches();
       injectInlineButtons();
@@ -445,6 +555,7 @@ function initInstagramMode() {
   setInterval(() => {
     highlightMatches();
     injectInlineButtons();
+    renderSidebar();
   }, 4000);
 }
 

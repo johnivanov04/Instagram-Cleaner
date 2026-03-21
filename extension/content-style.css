@@ -58,6 +58,44 @@
   color: #334155;
 }
 
+#ig-audit-sidebar .ig-audit-sync-status {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #0369a1;
+}
+
+#ig-audit-sidebar .ig-audit-diagnostics {
+  margin: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+#ig-audit-sidebar .ig-audit-diagnostics summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  user-select: none;
+}
+
+#ig-audit-sidebar .ig-audit-diagnostics-content {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: #334155;
+}
+
+#ig-audit-sidebar .ig-audit-diagnostics-content p {
+  margin: 0;
+}
+
+#ig-audit-sidebar .ig-audit-warning {
+  margin-top: 4px;
+  color: #b45309;
+  font-weight: 600;
+}
+
 #ig-audit-sidebar .ig-audit-actions {
   padding: 10px 14px;
   border-bottom: 1px solid #e2e8f0;
