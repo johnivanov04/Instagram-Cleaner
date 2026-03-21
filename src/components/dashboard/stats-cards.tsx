@@ -12,13 +12,14 @@ interface ItemProps {
 
 function Item({ label, value }: ItemProps): React.JSX.Element {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm text-slate-600 dark:text-slate-300">{label}</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-[11px] uppercase tracking-[0.14em] text-stone-500 dark:text-amber-200/70">{label}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-3xl font-bold tracking-tight">{value.toLocaleString()}</p>
+      <CardContent className="pt-0">
+        <p className="text-3xl font-bold tracking-tight text-stone-900 dark:text-amber-50">{value.toLocaleString()}</p>
       </CardContent>
+      <div className="h-1 w-full bg-gradient-to-r from-amber-400/70 to-transparent dark:from-amber-700/60" />
     </Card>
   );
 }
@@ -38,7 +39,7 @@ export function StatsCards(): React.JSX.Element | null {
   const completionPct = progressBase === 0 ? 0 : Math.round((completedCount / progressBase) * 100);
 
   return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8">
       <Item label="Followers" value={comparison.followers.length} />
       <Item label="Following" value={comparison.following.length} />
       <Item label="Not Following Back" value={comparison.nonFollowers.length} />

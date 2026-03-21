@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { DM_Serif_Display, Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -10,6 +10,12 @@ const manrope = Manrope({
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
+});
+
+const dmSerif = DM_Serif_Display({
+  variable: "--font-dm-serif",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}>
+    <html lang="en" className={`${manrope.variable} ${spaceGrotesk.variable} ${dmSerif.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

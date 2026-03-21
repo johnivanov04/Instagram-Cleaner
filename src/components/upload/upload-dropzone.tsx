@@ -42,9 +42,9 @@ export function UploadDropzone({ onFiles, disabled }: UploadDropzoneProps): Reac
       }}
       onDragOver={(event) => event.preventDefault()}
       className={cn(
-        "group flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center transition",
-        "border-emerald-400/70 bg-emerald-50/70 hover:bg-emerald-100/80 dark:border-emerald-700 dark:bg-emerald-950/20",
-        dragging && "scale-[1.01] bg-emerald-100 dark:bg-emerald-950/40",
+        "group flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed p-8 text-center transition duration-300",
+        "border-amber-300/90 bg-white/70 hover:-translate-y-0.5 hover:bg-amber-50/80 dark:border-stone-600 dark:bg-stone-900/55",
+        dragging && "scale-[1.01] border-amber-500 bg-amber-100/80 dark:bg-stone-800/80",
         disabled && "cursor-not-allowed opacity-70",
       )}
     >
@@ -62,9 +62,9 @@ export function UploadDropzone({ onFiles, disabled }: UploadDropzoneProps): Reac
           event.currentTarget.value = "";
         }}
       />
-      <Upload className="h-8 w-8 text-emerald-700 dark:text-emerald-300" />
-      <p className="mt-4 text-base font-semibold">Drop Instagram export files here</p>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+      <Upload className="h-8 w-8 text-amber-700 dark:text-amber-200" />
+      <p className="mt-4 text-base font-semibold text-stone-900 dark:text-amber-50">Drop Instagram export files here</p>
+      <p className="mt-1 text-sm text-stone-600 dark:text-amber-100/75">
         Supports JSON, HTML, and TXT. You can upload multiple split files at once.
       </p>
     </label>

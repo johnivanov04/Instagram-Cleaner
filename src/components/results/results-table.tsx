@@ -112,13 +112,13 @@ export function ResultsTable(): React.JSX.Element {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Review Accounts</CardTitle>
+        <CardTitle className="text-xl">Review Accounts</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] border-collapse text-sm">
+          <table className="w-full min-w-[760px] border-separate border-spacing-y-1 text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left dark:border-slate-800">
+              <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-stone-500 dark:text-amber-100/70">
                 <th className="py-2 pr-3">Selected</th>
                 <th className="py-2 pr-3">Username</th>
                 <th className="py-2 pr-3">Profile</th>
@@ -136,17 +136,17 @@ export function ResultsTable(): React.JSX.Element {
                 return (
                   <tr
                     key={`${row.normalizedUsername}-${row.category}`}
-                    className={`border-b border-slate-100 transition-all duration-300 dark:border-slate-900 ${
+                    className={`rounded-xl bg-white/78 transition-all duration-300 hover:bg-amber-50/80 dark:bg-stone-800/55 dark:hover:bg-stone-800 ${
                       isExiting ? "translate-x-2 opacity-0" : "translate-x-0 opacity-100"
                     }`}
                   >
-                    <td className="py-2 pr-3">
+                    <td className="rounded-l-xl py-2 pr-3 pl-2">
                       <Checkbox
                         checked={row.selected}
                         onChange={(event) => setSelected(row.normalizedUsername, event.target.checked)}
                       />
                     </td>
-                    <td className="py-2 pr-3 font-medium">@{row.username}</td>
+                    <td className="py-2 pr-3 font-semibold text-stone-900 dark:text-amber-50">@{row.username}</td>
                     <td className="py-2 pr-3">
                       <Button
                         size="sm"
@@ -158,14 +158,14 @@ export function ResultsTable(): React.JSX.Element {
                         </span>
                       </Button>
                     </td>
-                    <td className="py-2 pr-3 text-slate-600 dark:text-slate-300">{row.sourceFile ?? "-"}</td>
+                    <td className="py-2 pr-3 text-stone-600 dark:text-amber-100/75">{row.sourceFile ?? "-"}</td>
                     <td className="py-2 pr-3">
                       <Badge variant="neutral">{row.category}</Badge>
                     </td>
                     <td className="py-2 pr-3">
                       <Badge variant={statusVariant(row.status)}>{statusLabel(row.status)}</Badge>
                     </td>
-                    <td className="py-2 pr-3">
+                    <td className="rounded-r-xl py-2 pr-3">
                       <div className="flex flex-wrap gap-2">
                         <Button size="sm" variant="secondary" onClick={() => setStatus(row.normalizedUsername, "keep")}>
                           Keep
@@ -191,7 +191,7 @@ export function ResultsTable(): React.JSX.Element {
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-slate-600 dark:text-slate-300">
+          <p className="text-sm text-stone-600 dark:text-amber-100/75">
             Page {Math.min(page, totalPages)} of {totalPages}
           </p>
           <div className="flex gap-2">

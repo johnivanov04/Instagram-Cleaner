@@ -9,32 +9,26 @@ import { UploadPanel } from "@/components/upload/upload-panel";
 
 export function AppShell(): React.JSX.Element {
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-8">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-8 sm:py-10">
       <ExtensionSyncBridge />
-      <section className="rounded-2xl border border-emerald-300/60 bg-gradient-to-br from-emerald-100 via-lime-50 to-white p-6 shadow-sm dark:border-emerald-900/70 dark:from-emerald-950/60 dark:via-slate-950 dark:to-slate-950">
-        <p className="inline-block rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-          Privacy-first
-        </p>
-        <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">IG Follow Audit</h1>
-        <p className="mt-3 max-w-3xl text-sm text-slate-700 dark:text-slate-300 sm:text-base">
-          Identify accounts you follow that do not follow you back, using only your Instagram data export.
-          No scraping, no login automation, and no automatic unfollow actions.
-        </p>
+      <section className="rounded-3xl border border-amber-200/70 bg-[linear-gradient(125deg,rgba(255,251,245,0.98),rgba(245,231,213,0.88))] p-6 shadow-[0_16px_50px_rgba(92,65,40,0.12)] dark:border-amber-900/50 dark:bg-[linear-gradient(125deg,rgba(54,39,30,0.92),rgba(34,24,18,0.96))]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="inline-flex rounded-full border border-amber-300 bg-amber-100/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-amber-900 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-100">
+              Private local workflow
+            </p>
+            <h1 className="mt-3 text-4xl leading-tight text-stone-900 sm:text-5xl dark:text-amber-50">IG Follow Audit</h1>
+            <p className="mt-2 max-w-3xl text-sm text-stone-700 sm:text-base dark:text-amber-100/85">
+              Cleanly review who to keep or unfollow from your export files, then complete actions manually on Instagram.
+            </p>
+          </div>
 
-        <ol className="mt-5 grid gap-2 text-sm sm:grid-cols-2 xl:grid-cols-4">
-          <li className="rounded-lg border border-slate-200 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/70">
-            1. Export your Instagram data
-          </li>
-          <li className="rounded-lg border border-slate-200 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/70">
-            2. Upload followers and following files
-          </li>
-          <li className="rounded-lg border border-slate-200 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/70">
-            3. Review non-followers, mutuals, and fans
-          </li>
-          <li className="rounded-lg border border-slate-200 bg-white/90 p-3 dark:border-slate-800 dark:bg-slate-900/70">
-            4. Open profiles manually on Instagram
-          </li>
-        </ol>
+          <div className="grid gap-2 text-sm text-stone-700 dark:text-amber-100/90">
+            <p className="rounded-xl border border-amber-200/80 bg-white/70 px-3 py-2 dark:border-amber-800/80 dark:bg-stone-900/40">1. Upload followers + following exports</p>
+            <p className="rounded-xl border border-amber-200/80 bg-white/70 px-3 py-2 dark:border-amber-800/80 dark:bg-stone-900/40">2. Mark unfollow targets and completed actions</p>
+            <p className="rounded-xl border border-amber-200/80 bg-white/70 px-3 py-2 dark:border-amber-800/80 dark:bg-stone-900/40">3. Sync progress with extension sidebar</p>
+          </div>
+        </div>
       </section>
 
       <main className="mt-6 space-y-6">

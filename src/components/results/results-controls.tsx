@@ -43,13 +43,13 @@ export function ResultsControls(): React.JSX.Element {
   const selected = selectedUsernames(allRows);
 
   return (
-    <section className="space-y-3">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <section className="space-y-4 rounded-2xl border border-amber-200/80 bg-white/60 p-4 shadow-[0_10px_24px_rgba(96,67,43,0.08)] dark:border-stone-700 dark:bg-stone-900/45">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <Input
           placeholder="Search username"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="lg:max-w-sm"
+          className="xl:max-w-sm"
         />
 
         <div className="flex flex-wrap gap-2">
@@ -85,8 +85,9 @@ export function ResultsControls(): React.JSX.Element {
         {FILTERS.map((item) => (
           <Button
             key={item.key}
-            variant={filter === item.key ? "default" : "outline"}
+            variant={filter === item.key ? "default" : "ghost"}
             size="sm"
+            className={filter === item.key ? "shadow-[0_8px_18px_rgba(33,24,17,0.14)]" : "border border-amber-200/80 bg-white/70 dark:border-stone-600 dark:bg-stone-800/45"}
             onClick={() => setFilter(item.key)}
           >
             {item.label}
