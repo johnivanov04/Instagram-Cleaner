@@ -14,8 +14,6 @@ let toggleButton = null;
 let observer = null;
 let diagnosticsExpanded = false;
 let syncStatusTimer = null;
-let actionLogExpanded = false;
-let cachedActionLogEntries = [];
 
 const diagnostics = {
   source: "Unknown",
@@ -135,9 +133,6 @@ function getCompletedCount() {
 function savePayload(nextPayload) {
   payload = nextPayload;
   markDiagnosticsSource("App sync");
-  if (actionLogEngine) {
-    actionLogEngine.addEntry('app_sync_received', { source: 'App sync' });
-  }
   sendRuntimeMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: nextPayload });
 }
 
@@ -196,11 +191,6 @@ function markCompleted(username, shouldNotifyApp = true) {
       .sort((a, b) => a.localeCompare(b)),
     generatedAt: new Date().toISOString(),
   };
-
-  // Log action
-  if (actionLogEngine) {
-    actionLogEngine.addEntry('mark_completed', { username: normalized });
-  }
 
   sendRuntimeMessage({ type: "IG_AUDIT_MARK_COMPLETED", username });
 
@@ -296,25 +286,6 @@ function renderSidebar() {
     ${selectorHealthHtml}
   `;
 
-  // Build action log panel
-  let actionLogHtml = "";
-  if (cachedActionLogEntries && cachedActionLogEntries.length > 0) {
-    const actionItems = cachedActionLogEntries
-      .slice(0, 10)
-      .map((entry) => `<p>${formatActionLogEntry(entry)}</p>`)
-      .join("");
-
-    actionLogHtml = `
-      <details class="ig-audit-action-log" ${actionLogExpanded ? "open" : ""}>
-        <summary>Action Log (${cachedActionLogEntries.length})</summary>
-        <div class="ig-audit-diagnostics-content">
-          ${actionItems}
-          <button type="button" data-action="clear-log" style="margin-top: 8px; width: 100%; padding: 6px; background: #f5ede3; border: 1px solid #d4c5b0; border-radius: 6px; cursor: pointer;">Clear Log</button>
-        </div>
-      </details>
-    `;
-  }
-
   const listMarkup = accounts
     .map((account) => {
       const completedClass = "";
@@ -344,7 +315,6 @@ function renderSidebar() {
         <button type="button" data-action="request-sync">Sync</button>
       </div>
       ${diagnosticsPanel}
-      ${actionLogHtml}
       <div class="ig-audit-actions">
         <button type="button" data-action="next">Open next unfollow target</button>
       </div>
@@ -368,14 +338,8 @@ function renderSidebar() {
 
       if (action === "request-sync") {
         setSyncStatus("Syncing...");
-        if (actionLogEngine) {
-          actionLogEngine.addEntry('sync_request', {});
-        }
         sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" }, () => {
           setSyncStatus("Synced");
-          if (actionLogEngine) {
-            actionLogEngine.addEntry('sync_completed', {});
-          }
         });
         return;
       }
@@ -404,16 +368,6 @@ function renderSidebar() {
         return;
       }
 
-      if (action === "clear-log") {
-        if (actionLogEngine) {
-          actionLogEngine.clearLog().then(() => {
-            cachedActionLogEntries = [];
-            renderSidebar();
-          });
-        }
-        return;
-      }
-
     });
   });
 
@@ -421,13 +375,6 @@ function renderSidebar() {
   if (diagnosticsElement instanceof HTMLDetailsElement) {
     diagnosticsElement.addEventListener("toggle", () => {
       diagnosticsExpanded = diagnosticsElement.open;
-    });
-  }
-
-  const actionLogElement = sidebarRoot.querySelector(".ig-audit-action-log");
-  if (actionLogElement instanceof HTMLDetailsElement) {
-    actionLogElement.addEventListener("toggle", () => {
-      actionLogExpanded = actionLogElement.open;
     });
   }
 }
@@ -671,21 +618,6 @@ function initInstagramMode() {
   selectorHealthEngine.startPolling((state) => {
     diagnostics.selectorHealth = state.results;
     renderSidebar();
-  });
-
-  // Start action log listener to re-render on new actions
-  if (actionLogEngine) {
-    actionLogEngine.onEntryAdded((entry, allEntries) => {
-      cachedActionLogEntries = allEntries;
-      renderSidebar();
-    });
-  }
-
-  // Auto-clear action log on page unload
-  window.addEventListener('beforeunload', async () => {
-    if (actionLogEngine) {
-      await actionLogEngine.clearLog();
-    }
   });
 
   setInterval(() => {

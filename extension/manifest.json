@@ -22,8 +22,6 @@
       "js": [
         "selector-registry.js",
         "selector-health.js",
-        "action-log.js",
-        "action-log-engine.js",
         "content-script.js"
       ],
       "css": ["content-style.css"],
