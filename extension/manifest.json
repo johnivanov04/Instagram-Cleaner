@@ -19,7 +19,13 @@
         "http://localhost:3000/*",
         "http://127.0.0.1:3000/*"
       ],
-      "js": ["content-script.js"],
+      "js": [
+        "selector-registry.js",
+        "selector-health.js",
+        "action-log.js",
+        "action-log-engine.js",
+        "content-script.js"
+      ],
       "css": ["content-style.css"],
       "run_at": "document_idle"
     }

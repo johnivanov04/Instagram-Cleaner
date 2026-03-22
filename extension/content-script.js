@@ -14,12 +14,15 @@ let toggleButton = null;
 let observer = null;
 let diagnosticsExpanded = false;
 let syncStatusTimer = null;
+let actionLogExpanded = false;
+let cachedActionLogEntries = [];
 
 const diagnostics = {
   source: "Unknown",
   lastSyncAtMs: null,
   lastAppSyncAtMs: null,
   syncStatus: "",
+  selectorHealth: {},
 };
 
 function setSyncStatus(text) {
@@ -132,6 +135,9 @@ function getCompletedCount() {
 function savePayload(nextPayload) {
   payload = nextPayload;
   markDiagnosticsSource("App sync");
+  if (actionLogEngine) {
+    actionLogEngine.addEntry('app_sync_received', { source: 'App sync' });
+  }
   sendRuntimeMessage({ type: "IG_AUDIT_SYNC_PAYLOAD", payload: nextPayload });
 }
 
@@ -191,6 +197,11 @@ function markCompleted(username, shouldNotifyApp = true) {
     generatedAt: new Date().toISOString(),
   };
 
+  // Log action
+  if (actionLogEngine) {
+    actionLogEngine.addEntry('mark_completed', { username: normalized });
+  }
+
   sendRuntimeMessage({ type: "IG_AUDIT_MARK_COMPLETED", username });
 
   if (shouldNotifyApp) {
@@ -248,6 +259,29 @@ function renderSidebar() {
   const staleText = staleWarning
     ? '<div class="ig-audit-warning">App sync is stale (older than 5m).</div>'
     : "";
+
+  // Build selector health display
+  let selectorHealthHtml = "";
+  if (diagnostics.selectorHealth && Object.keys(diagnostics.selectorHealth).length > 0) {
+    const health = diagnostics.selectorHealth;
+    const healthItems = [
+      health.profileHeader ? `<p><strong>Profile Header:</strong> ${health.profileHeader.status === 'failed' ? '❌' : '✓'} ${health.profileHeader.status}</p>` : "",
+      health.highlightCandidates ? `<p><strong>Highlight:</strong> ${health.highlightCandidates.status === 'failed' ? '❌' : '✓'} ${health.highlightCandidates.status}</p>` : "",
+      health.profileLink ? `<p><strong>Profile Link:</strong> ${health.profileLink.status === 'failed' ? '❌' : '✓'} ${health.profileLink.status}</p>` : "",
+    ].filter(Boolean).join("");
+
+    if (healthItems) {
+      selectorHealthHtml = `
+        <details class="ig-audit-selector-health">
+          <summary>Selector Health</summary>
+          <div class="ig-audit-diagnostics-content">
+            ${healthItems}
+          </div>
+        </details>
+      `;
+    }
+  }
+
   const diagnosticsPanel = `
     <details class="ig-audit-diagnostics" ${diagnosticsExpanded ? "open" : ""}>
       <summary>Diagnostics</summary>
@@ -259,7 +293,27 @@ function renderSidebar() {
         ${staleText}
       </div>
     </details>
+    ${selectorHealthHtml}
   `;
+
+  // Build action log panel
+  let actionLogHtml = "";
+  if (cachedActionLogEntries && cachedActionLogEntries.length > 0) {
+    const actionItems = cachedActionLogEntries
+      .slice(0, 10)
+      .map((entry) => `<p>${formatActionLogEntry(entry)}</p>`)
+      .join("");
+
+    actionLogHtml = `
+      <details class="ig-audit-action-log" ${actionLogExpanded ? "open" : ""}>
+        <summary>Action Log (${cachedActionLogEntries.length})</summary>
+        <div class="ig-audit-diagnostics-content">
+          ${actionItems}
+          <button type="button" data-action="clear-log" style="margin-top: 8px; width: 100%; padding: 6px; background: #f5ede3; border: 1px solid #d4c5b0; border-radius: 6px; cursor: pointer;">Clear Log</button>
+        </div>
+      </details>
+    `;
+  }
 
   const listMarkup = accounts
     .map((account) => {
@@ -290,6 +344,7 @@ function renderSidebar() {
         <button type="button" data-action="request-sync">Sync</button>
       </div>
       ${diagnosticsPanel}
+      ${actionLogHtml}
       <div class="ig-audit-actions">
         <button type="button" data-action="next">Open next unfollow target</button>
       </div>
@@ -313,8 +368,14 @@ function renderSidebar() {
 
       if (action === "request-sync") {
         setSyncStatus("Syncing...");
+        if (actionLogEngine) {
+          actionLogEngine.addEntry('sync_request', {});
+        }
         sendRuntimeMessage({ type: "IG_AUDIT_REQUEST_SYNC_FROM_APP" }, () => {
           setSyncStatus("Synced");
+          if (actionLogEngine) {
+            actionLogEngine.addEntry('sync_completed', {});
+          }
         });
         return;
       }
@@ -343,6 +404,16 @@ function renderSidebar() {
         return;
       }
 
+      if (action === "clear-log") {
+        if (actionLogEngine) {
+          actionLogEngine.clearLog().then(() => {
+            cachedActionLogEntries = [];
+            renderSidebar();
+          });
+        }
+        return;
+      }
+
     });
   });
 
@@ -352,6 +423,13 @@ function renderSidebar() {
       diagnosticsExpanded = diagnosticsElement.open;
     });
   }
+
+  const actionLogElement = sidebarRoot.querySelector(".ig-audit-action-log");
+  if (actionLogElement instanceof HTMLDetailsElement) {
+    actionLogElement.addEventListener("toggle", () => {
+      actionLogExpanded = actionLogElement.open;
+    });
+  }
 }
 
 function resolveUsernameFromContext(node) {
@@ -359,14 +437,25 @@ function resolveUsernameFromContext(node) {
     return "";
   }
 
-  const usernameFromHref = node
-    .querySelector('a[href^="/"]')
-    ?.getAttribute("href")
-    ?.split("/")
-    .filter(Boolean)[0];
+  // Try primary selector for profile links
+  let link = node.querySelector('a[href^="/"]');
 
-  if (usernameFromHref) {
-    return normalizeUsername(usernameFromHref);
+  // Try fallback selectors if primary didn't work
+  if (!link) {
+    link = node.querySelector('a[role="link"][href^="/"]');
+  }
+
+  // Try alternative fallback
+  if (!link) {
+    link = node.querySelector('a[href*="/"]');
+  }
+
+  if (link) {
+    const href = link.getAttribute("href");
+    const usernameFromHref = href?.split("/").filter(Boolean)[0];
+    if (usernameFromHref) {
+      return normalizeUsername(usernameFromHref);
+    }
   }
 
   const words = (node.textContent || "")
@@ -400,7 +489,25 @@ function highlightMatches() {
     return;
   }
 
-  const candidates = document.querySelectorAll("article, li, div");
+  // Use selector registry for more refined candidate selection
+  const highlightDef = selectorRegistry.highlightCandidates;
+  if (!highlightDef) {
+    return;
+  }
+
+  // Try to use primary selector first (role="presentation" for article elements)
+  let candidates = document.querySelectorAll(highlightDef.primary);
+
+  // If primary didn't find enough elements, try fallbacks
+  if (candidates.length === 0) {
+    for (const fallbackSelector of highlightDef.fallbacks) {
+      candidates = document.querySelectorAll(fallbackSelector);
+      if (candidates.length > 0) {
+        break;
+      }
+    }
+  }
+
   for (const node of candidates) {
     const username = resolveUsernameFromContext(node);
     if (watch.has(username)) {
@@ -427,11 +534,18 @@ function injectInlineButtons() {
     return;
   }
 
-  const hostSelectors = ["main header section", "header section", "main section"];
+  // Use selector registry with fallback chain
+  const headerDef = selectorRegistry.profileHeader;
+  if (!headerDef) {
+    return;
+  }
+
   let host = null;
-  for (const selector of hostSelectors) {
+  const allSelectors = [headerDef.primary, ...headerDef.fallbacks];
+
+  for (const selector of allSelectors) {
     const element = document.querySelector(selector);
-    if (element) {
+    if (element instanceof HTMLElement) {
       host = element;
       break;
     }
@@ -552,6 +666,28 @@ function initInstagramMode() {
   mountUi();
   requestPayloadFromBackground();
   startObserver();
+  
+  // Start health check polling with callback to update diagnostics
+  selectorHealthEngine.startPolling((state) => {
+    diagnostics.selectorHealth = state.results;
+    renderSidebar();
+  });
+
+  // Start action log listener to re-render on new actions
+  if (actionLogEngine) {
+    actionLogEngine.onEntryAdded((entry, allEntries) => {
+      cachedActionLogEntries = allEntries;
+      renderSidebar();
+    });
+  }
+
+  // Auto-clear action log on page unload
+  window.addEventListener('beforeunload', async () => {
+    if (actionLogEngine) {
+      await actionLogEngine.clearLog();
+    }
+  });
+
   setInterval(() => {
     highlightMatches();
     injectInlineButtons();
