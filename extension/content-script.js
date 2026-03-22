@@ -13,6 +13,7 @@ let sidebarRoot = null;
 let toggleButton = null;
 let observer = null;
 let diagnosticsExpanded = false;
+let selectorHealthExpanded = false;
 let syncStatusTimer = null;
 
 const diagnostics = {
@@ -262,7 +263,7 @@ function renderSidebar() {
 
     if (healthItems) {
       selectorHealthHtml = `
-        <details class="ig-audit-selector-health">
+        <details class="ig-audit-diagnostics ig-audit-selector-health" ${selectorHealthExpanded ? "open" : ""}>
           <summary>Selector Health</summary>
           <div class="ig-audit-diagnostics-content">
             ${healthItems}
@@ -371,10 +372,17 @@ function renderSidebar() {
     });
   });
 
-  const diagnosticsElement = sidebarRoot.querySelector(".ig-audit-diagnostics");
+  const diagnosticsElement = sidebarRoot.querySelector(".ig-audit-diagnostics:not(.ig-audit-selector-health)");
   if (diagnosticsElement instanceof HTMLDetailsElement) {
     diagnosticsElement.addEventListener("toggle", () => {
       diagnosticsExpanded = diagnosticsElement.open;
+    });
+  }
+
+  const selectorHealthElement = sidebarRoot.querySelector(".ig-audit-selector-health");
+  if (selectorHealthElement instanceof HTMLDetailsElement) {
+    selectorHealthElement.addEventListener("toggle", () => {
+      selectorHealthExpanded = selectorHealthElement.open;
     });
   }
 }
