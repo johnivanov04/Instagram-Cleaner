@@ -5,10 +5,8 @@
 
 import {
   getAllSelectorNames,
-  getSelector,
   resolveSelectors,
   SelectorResult,
-  SelectorDefinition,
 } from './selector-registry';
 
 export interface HealthCheckState {

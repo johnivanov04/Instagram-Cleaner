@@ -120,3 +120,11 @@ function resolveSelectors(definitionNames, context = document) {
 function getAllSelectorNames() {
   return Object.keys(selectorRegistry);
 }
+
+// Expose helpers for other extension content scripts loaded in sequence.
+globalThis.igAuditSelectorRegistry = {
+  selectorRegistry,
+  resolveSelector,
+  resolveSelectors,
+  getAllSelectorNames,
+};
