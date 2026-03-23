@@ -92,7 +92,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `https://igtidy.com` for production usage, or `http://localhost:3000` for local development.
 
 ## Test
 

@@ -20,12 +20,11 @@ Chrome extension that pairs with IG Follow Audit and overlays a helper sidebar o
 
 ## Run with the app
 
-1. Start app with `npm run dev`
-2. Open the app at `http://localhost:3000`
-3. Upload files and mark accounts as **Mark for Unfollow**
-4. Open Instagram (`https://www.instagram.com`)
-5. Click the **IG Audit** floating button to open the sidebar
-6. Use:
+1. Open the app at `https://igtidy.com` (production) or start local app with `npm run dev` and use `http://localhost:3000`
+2. Upload files and mark accounts as **Mark for Unfollow**
+3. Open Instagram (`https://www.instagram.com`)
+4. Click the **IG Audit** floating button to open the sidebar
+5. Use:
    - **Open profile** to jump to a target
    - **Mark Completed** to sync completion back to the app
    - **Open next unfollow target** for quick navigation
@@ -34,7 +33,7 @@ Chrome extension that pairs with IG Follow Audit and overlays a helper sidebar o
 
 - Sidebar not updating: click **Sync** in the extension sidebar while the app tab is open
 - No targets visible: verify accounts are marked as **Mark for Unfollow** in the app
-- Local dev host mismatch: this extension allows `localhost:3000` and `127.0.0.1:3000`
+- Host mismatch: this extension allows `https://igtidy.com`, `localhost:3000`, and `127.0.0.1:3000`
 - Extension not loading: ensure you selected the `extension` folder containing `manifest.json`
 
 ## Security and Limits

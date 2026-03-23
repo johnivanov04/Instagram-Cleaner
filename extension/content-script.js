@@ -6,7 +6,9 @@ const TOGGLE_ID = "ig-audit-toggle";
 
 const isInstagram = window.location.hostname === "www.instagram.com";
 const isAppHost =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1" ||
+  window.location.hostname === "igtidy.com";
 
 let payload = null;
 let sidebarRoot = null;

@@ -88,7 +88,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.storage.local.get(STORAGE_KEY, (result) => {
       const next = updatePayloadWithCompleted(result[STORAGE_KEY], message.username);
       chrome.storage.local.set({ [STORAGE_KEY]: next }, () => {
-        broadcastToUrls(["http://localhost:3000/*", "http://127.0.0.1:3000/*"], {
+        broadcastToUrls(["https://igtidy.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"], {
           type: "IG_AUDIT_MARK_COMPLETED",
           username: message.username,
         });
@@ -101,7 +101,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "IG_AUDIT_REQUEST_SYNC_FROM_APP") {
-    broadcastToUrls(["http://localhost:3000/*", "http://127.0.0.1:3000/*"], {
+    broadcastToUrls(["https://igtidy.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"], {
       type: "IG_AUDIT_REQUEST_SYNC_FROM_APP",
     }, () => {
       sendResponse({ ok: true });
@@ -111,7 +111,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "IG_AUDIT_BROADCAST_TO_APP" && message.payload) {
-    broadcastToUrls(["http://localhost:3000/*", "http://127.0.0.1:3000/*"], message.payload, () => {
+    broadcastToUrls(["https://igtidy.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"], message.payload, () => {
       sendResponse({ ok: true });
     });
 
