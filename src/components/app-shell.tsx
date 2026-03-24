@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { ExtensionSyncBridge } from "@/components/extension-sync-bridge";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { ResultsPanel } from "@/components/results/results-panel";
@@ -36,6 +37,23 @@ export function AppShell(): React.JSX.Element {
         <StatsCards />
         <ResultsPanel />
       </main>
+
+      <footer className="mt-8 rounded-2xl border border-amber-200/70 bg-white/70 px-4 py-3 text-xs text-stone-700 dark:border-amber-900/40 dark:bg-stone-900/40 dark:text-amber-100/85">
+        <nav className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Link className="underline decoration-amber-400 underline-offset-2" href="/privacy">
+            Privacy Policy
+          </Link>
+          <Link className="underline decoration-amber-400 underline-offset-2" href="/terms">
+            Terms of Use
+          </Link>
+          <Link className="underline decoration-amber-400 underline-offset-2" href="/support">
+            Support
+          </Link>
+          <Link className="underline decoration-amber-400 underline-offset-2" href="/how-to">
+            How to Use
+          </Link>
+        </nav>
+      </footer>
 
       <ToastViewport />
     </div>
