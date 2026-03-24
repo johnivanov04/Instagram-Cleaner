@@ -260,16 +260,4 @@ If selectors fail after Instagram updates its DOM:
 
 ---
 
-## Summary Checklist
 
-- [ ] Test 1: Profile button injects correctly
-- [ ] Test 2: Followers list highlights matching accounts
-- [ ] Test 3: Username extraction works via fallbacks
-- [ ] Test 4: Selector Health shows in Diagnostics
-- [ ] Test 5: Fallback activation works when primary fails
-- [ ] Test 6: Stale data warning triggers after 5m
-- [ ] Test 7: Performance is good with many highlights
-- [ ] Console shows no unexpected errors
-- [ ] Lint and tests pass (`npm run lint`, `npm run test`)
-
-All tests passing = **Green light for deployment** ✅
