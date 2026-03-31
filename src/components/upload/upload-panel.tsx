@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { parseUploadedFiles } from "@/lib/parsers";
 import { useAuditStore } from "@/store/use-audit-store";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { UploadDropzone } from "./upload-dropzone";
 
 export function UploadPanel(): React.JSX.Element {
+  const router = useRouter();
   const setParsed = useAuditStore((s) => s.setParsed);
   const parsed = useAuditStore((s) => s.parsed);
   const [progress, setProgress] = React.useState<{ completed: number; total: number } | null>(null);
@@ -75,16 +77,7 @@ export function UploadPanel(): React.JSX.Element {
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="secondary"
-            onClick={() =>
-              toast({
-                kind: "info",
-                title: "Export help",
-                description: "Instagram app: Settings > Your Activity > Download Your Information.",
-              })
-            }
-          >
+          <Button variant="secondary" onClick={() => router.push("/how-to-export")}>
             How to export data
           </Button>
         </div>
